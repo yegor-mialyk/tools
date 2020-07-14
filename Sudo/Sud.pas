@@ -39,7 +39,7 @@ begin
     not GetParamStr(pCmd, StartupDir) or
     not GetParamStr(pCmd, Command) then
   begin
-    WriteLn('SU(d): Error parsing commad line: ', lpCmdLine, '.');
+    WriteLn('SU(d): Error parsing command line: ', lpCmdLine, '.');
     Exit;
   end;
 

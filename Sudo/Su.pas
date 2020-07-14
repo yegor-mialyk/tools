@@ -60,7 +60,7 @@ begin
       Break;
   until False;
 
-  if not QuietMode then
+  if (Command = '') or ShowHelp then
   begin
     WriteLn('SU - ', APP_NAME, ', version ', VERSION_STRING,
       ' | https://github.com/yegor-mialyk/tools', CRLF,
