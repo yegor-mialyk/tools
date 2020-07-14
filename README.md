@@ -24,6 +24,8 @@ Attempting start...
 Internet services successfully restarted
 ```
 
+User Account Control (UAC) may prompt the user for consent to run the command elevated.
+
 ### Installation
 
 1. Download the latest [Sudo release](https://github.com/yegor-mialyk/tools/releases/latest) for your platform.
@@ -34,11 +36,11 @@ Internet services successfully restarted
 
 #### Q: I'm running a GUI application via `su`, but my shell is blocked.
 
-A: Please use the `--no-wait` (or just `-n`) option to not to wait for your application to finish.
+Please use the `--no-wait` (or just `-n`) option to not to wait for your application to finish.
 
 #### Q: Why the main module called `su` and not `sudo`?
 
-A: `su` is shorter.
+`su` is shorter.
 
 #### Q: I'm trying to execute `su dir` but it fails.
 
