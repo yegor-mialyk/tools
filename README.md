@@ -5,9 +5,11 @@
 
 ## Seamless Sudo
 
-Seamless Sudo runs a user command as administrator without opening a separate console window, so you will never lose its output.
+Seamless Sudo runs a user command as administrator **without opening a separate console window**, so you will never lose its output.
 
-For example:
+No need to open a new shell instance as administrator anymore.
+
+Here are a couple of examples:
 
 ```
 C:\>iisreset
@@ -24,13 +26,25 @@ Attempting start...
 Internet services successfully restarted
 ```
 
-User Account Control (UAC) may prompt the user for consent to run the command elevated.
+```
+C:>fsutil file layout test.vhdx
+Error:  Access is denied.
+
+C:>su fsutil file layout test.vhdx
+Executing: fsutil file layout test.vhdx
+
+********* File 0x0041000000012d93 *********
+File reference number   : 0x0041000000012d93
+[skipped]
+```
+
+User Account Control (UAC) may prompt the user for consent to run the command elevated or enter the credentials of an administrator account used to run the command.
 
 ### Installation
 
-1. Download the latest [Sudo release](https://github.com/yegor-mialyk/tools/releases/latest) for your platform.
-2. Unpack the package into a folder accessible by the `PATH` environment variable.
-3. Enjoy.
+- Download the latest [Sudo release](https://github.com/yegor-mialyk/tools/releases/latest) for your platform.
+- Unpack the package into a folder accessible by the `PATH` environment variable.
+- Enjoy.
 
 ### FAQ
 
@@ -38,13 +52,13 @@ User Account Control (UAC) may prompt the user for consent to run the command el
 
 Please use the `--no-wait` (or just `-n`) option to not to wait for your application to finish.
 
-#### Q: Why the main module called `su` and not `sudo`?
+#### Q: Why the main module called `su.exe` and not `sudo.exe`?
 
-`su` is shorter.
+`su` is shorter, but you are free to rename it or use an alias.
 
 #### Q: I'm trying to execute `su dir` but it fails.
 
-`dir` is an internal command of your shell and not a standalone utility. So you have to run it through the shell, e.g. `su cmd /c dir`.
+`dir` is an internal command of your shell and not a standalone utility. So you have to run it through the shell, e.g. `su cmd /c dir`. Seamless Sudo does not use any shell by default due to users may have different preferences.
 
 ### Feedback
 
