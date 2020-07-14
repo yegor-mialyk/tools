@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        "**/*.dcu": true,
+        "**/*.exe": true,
+        "**/*.dll": true,
+        "**/*.RES": true,
+        "releases": true
+    }
+}

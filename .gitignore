@@ -1,0 +1,7 @@
+*.dcu
+*.res
+*.dll
+*.exe
+*.log
+
+releases

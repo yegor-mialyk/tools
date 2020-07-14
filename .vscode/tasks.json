@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Sudo",
+      "command": "cmd.exe",
+      "type": "process",
+      "args": [
+        "/c",
+        "build.cmd"
+      ],
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+)\\)\\s(Fatal|Error|Warning|Hint):(.*)",
+          "file": 1,
+          "line": 2,
+          "severity": 3,
+          "message": 4
+        }
+      },
+      "options": {
+        "cwd": "${workspaceFolder}\\Sudo"
+      },
+      "presentation": {
+        "reveal": "silent"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
