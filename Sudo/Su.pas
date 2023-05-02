@@ -1,7 +1,7 @@
 //
 // Seamless Sudo
 //
-// Copyright (C) 1995-2020, Yegor Mialyk. All Rights Reserved.
+// Copyright (C) 1995-2023, Yegor Mialyk. All Rights Reserved.
 //
 // Licensed under the MIT License. See the LICENSE file for details.
 //
@@ -16,9 +16,13 @@ program Su;
 
 uses
   Winapi.Windows,
+  Winapi.WinNt,
   Winapi.ShellAPI,
   System.SysUtils,
   My.Lib;
+
+const
+  SuApp = 'su.exe';
 
 {$INCLUDE Common.g.pas}
 
@@ -30,21 +34,43 @@ begin
   Result := False;
 end;
 
+var
+  NoWait: Boolean = False;
+  QuietMode: Boolean = False;
+  AsSystem: Boolean = False;
+  StartupDir: string = '';
+  ConsolePid: string = '';
+
+function GetSuCommandLine: string;
+begin
+  Result := '';
+
+  if NoWait then
+    Result := '-n';
+
+  if QuietMode then
+    Result := Result + ' -q';
+
+  if StartupDir <> '' then
+    Result := Result + ' -d "' + StartupDir + '"';
+end;
+
+{$INCLUDE RunAsSystem.pas}
+
 begin
   SetConsoleCtrlHandler(@CtrlHandlerRoutine, True);
 
   var s: string;
 
   var pCmd := GetCommandLine();
+
   GetParamStr(pCmd, s);
 
   var ShowHelp := False;
-  var QuietMode := False;
-  var NoWait := False;
   var InvalidOption := '';
   var Command := '';
 
-  var StartupDir := GetCurrentDir;
+  StartupDir := GetCurrentDir;
 
   repeat
     if TestSwitch(pCmd, '?', 'help', ShowHelp) then
@@ -53,23 +79,82 @@ begin
     else
     if TestSwitch(pCmd, 'd', 'startup-dir', StartupDir) then
     else
+    if TestSwitch(pCmd, 's', 'system', AsSystem) then
+    else
     if TestSwitch(pCmd, 'n', 'no-wait', NoWait) then
+    else
+    if TestSwitch(pCmd, '', '--', ConsolePid) then
+      Break
     else
     if IsSwitch(pCmd, InvalidOption) or
       not GetParamStr(pCmd, Command) or (Command <> '') then
       Break;
   until False;
 
+  if ConsolePid <> '' then
+  begin
+    FreeConsole();
+
+    var pid := DWORD(My.Lib.StrToInt(ConsolePid));
+    if ErrorCode <> 0 then
+      pid := ATTACH_PARENT_PROCESS;
+
+    if not AttachConsole(pid) then
+    begin
+      ErrorCode := GetLastError();
+      WriteLn('SU(admin): Error attaching to console: ' + SysErrorMessage(ErrorCode));
+      Sleep(2000);
+      Exit;
+    end;
+
+    if not GetParamStr(pCmd, Command) then
+    begin
+      WriteLn('SU(admin): Error parsing command line.');
+      Exit;
+    end;
+
+    if AsSystem then
+    begin
+      RunAsSystem(Command, pCmd);
+
+      if ErrorCode <> 0 then
+        WriteLn('SU(admin): Cannot execute ''', Command, ''' as SYSTEM: ', SysErrorMessage(ErrorCode));
+
+      Exit;
+    end;
+
+    var SEI: SHELLEXECUTEINFO;
+    FillChar(SEI, SizeOf(SHELLEXECUTEINFO), 0);
+    SEI.cbSize := SizeOf(SHELLEXECUTEINFO);
+    SEI.fMask := SEE_MASK_DOENVSUBST or SEE_MASK_FLAG_NO_UI or SEE_MASK_NOCLOSEPROCESS or
+      SEE_MASK_NOASYNC or SEE_MASK_NO_CONSOLE;
+    SEI.lpFile := Pointer(Command);
+    SEI.lpDirectory := Pointer(StartupDir);
+    SEI.lpParameters := pCmd;
+    SEI.nShow := SW_SHOWNORMAL;
+
+    if not ShellExecuteEx(@SEI) then
+    begin
+      ErrorCode := GetLastError();
+      WriteLn('SU(admin): Cannot execute ''', Command, ''': ', SysErrorMessage(ErrorCode));
+      Exit;
+    end;
+
+    if not NoWait then
+      WaitForSingleObject(SEI.hProcess, INFINITE);
+
+    Exit;
+  end;
+
   if (Command = '') or ShowHelp then
   begin
     WriteLn('SU - ', APP_NAME, ', version ', VERSION_STRING,
-      ' | https://github.com/yegor-mialyk/tools', CRLF,
-      COPYRIGHT_STRING, CRLF);
+      ' | https://github.com/yegor-mialyk/tools', CRLF, COPYRIGHT_STRING, CRLF);
   end;
 
   if InvalidOption <> '' then
   begin
-    WriteLn('SU: Invalid option: ', InvalidOption);
+    WriteLn('SU: Invalid argument: ', InvalidOption);
     ExitCode := 2;
     Exit;
   end;
@@ -77,7 +162,7 @@ begin
   if ShowHelp then
   begin
     WriteLn('Description:'#13#10,
-      '  Runs a command as administrator.'#13#10,
+      '  Runs a command as the Administrator or the SYSTEM account.'#13#10,
       '  User Account Control (UAC) may prompt the user for consent to run the command elevated.'#13#10,
       CRLF,
       'Usage:'#13#10,
@@ -87,6 +172,7 @@ begin
       '  -?, --help                     This screen.'#13#10,
       '  -d, --startup-dir <directory>  Specify a startup directory (default: the current directory).'#13#10,
       '  -n, --no-wait                  Do not wait for the command to finish.'#13#10,
+      '  -s, --system                   Run as SYSTEM by cloning the access token of winlogon.exe.'#13#10,
       '  -q, --quiet                    Suppress all SU messages and banners (except errors).'#13#10,
       CRLF,
       'Note: Environment variables are expanded in both command and startup directory.'#13#10);
@@ -101,10 +187,13 @@ begin
     Exit;
   end;
 
-  var CommandArgs: string := pCmd;
+  var CommandLine := GetSuCommandLine;
+
+  if AsSystem then
+    CommandLine := CommandLine + ' -s';
 
   if not QuietMode then
-    WriteLn('Executing: ', Command, CommandArgs, CRLF);
+    WriteLn('Executing: ', Command, pCmd, CRLF);
 
   var SEI: SHELLEXECUTEINFO;
   FillChar(SEI, SizeOf(SHELLEXECUTEINFO), 0);
@@ -112,15 +201,15 @@ begin
   SEI.fMask := SEE_MASK_DOENVSUBST or SEE_MASK_FLAG_NO_UI or SEE_MASK_NOCLOSEPROCESS or
     SEE_MASK_NOASYNC or SEE_MASK_NO_CONSOLE;
   SEI.lpVerb := 'runas';
-  SEI.lpFile := 'rundll32.exe';
-  SEI.lpParameters := PChar('"' + GetAppPath + 'sud.dll",Execute ' + BoolToStrW(NoWait) +
-    ' "' + StartupDir + '" "' + Command + '" ' + CommandArgs);
-  SEI.nShow := SW_SHOWNORMAL;
+  SEI.lpFile := PChar(GetAppPath + SuApp);
+  SEI.lpParameters := PChar(CommandLine + ' ---- ' + IntToStr(GetCurrentProcessId()) +
+    ' "' + Command + '" ' + pCmd);
+  SEI.nShow := SW_HIDE;
 
   if not ShellExecuteEx(@SEI) then
   begin
-    var code := GetLastError();
-    WriteLn('SU: Cannot execute sudo demon (sud.dll): ', SysErrorMessage(code));
+    ErrorCode := GetLastError();
+    WriteLn('SU: Cannot execute sudo as Administrator: ', SysErrorMessage(ErrorCode));
     ExitCode := 2;
     Exit;
   end;
