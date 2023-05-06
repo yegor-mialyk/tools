@@ -1,2 +1,12 @@
 {
+  "commands.workspaceCommands": {
+    "workbench.action.tasks.build_452": {
+      "command": "workbench.action.tasks.build",
+      "statusBar": {
+        "alignment": "left",
+        "text": "⚡Build",
+        "color": "yellow"
+      }
+    }
+  }
 }
