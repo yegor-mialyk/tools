@@ -2,7 +2,8 @@ procedure RunAsSystem(const Command: string; const CommandArgs: PChar);
 begin
   if not AdjustPrivilege(SE_DEBUG_NAME) then
     Exit;
-  var WLPid := GetProcessPID('winlogon.exe');
+
+  var WLPid := GetProcessPid('winlogon.exe');
 
   if WLPid = 0 then
     Exit;
@@ -44,6 +45,7 @@ begin
   FillChar(PI, SizeOf(PROCESS_INFORMATION), 0);
   FillChar(SI, SizeOf(STARTUPINFO), 0);
   SI.cb := SizeOf(STARTUPINFO);
+  SI.dwFlags := STARTF_USESHOWWINDOW;
   SI.wShowWindow := SW_HIDE;
 
   if not CreateProcessWithTokenW(DuplicatedTokenHandle, 0, NULL,

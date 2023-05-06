@@ -102,8 +102,7 @@ begin
     if not AttachConsole(pid) then
     begin
       ErrorCode := GetLastError();
-      WriteLn('SU(admin): Error attaching to console: ' + SysErrorMessage(ErrorCode));
-      Sleep(2000);
+      ShowMessageW('Error attaching to console: ' + SysErrorMessage(ErrorCode), 'Seamless Sudo');
       Exit;
     end;
 
@@ -193,7 +192,14 @@ begin
     CommandLine := CommandLine + ' -s';
 
   if not QuietMode then
-    WriteLn('Executing: ', Command, pCmd, CRLF);
+  begin
+    if AsSystem then
+      Write('Executing (as SYSTEM): ')
+    else
+      Write('Executing (as Administrator): ');
+
+    WriteLn(Command, pCmd, CRLF);
+  end;
 
   var SEI: SHELLEXECUTEINFO;
   FillChar(SEI, SizeOf(SHELLEXECUTEINFO), 0);
