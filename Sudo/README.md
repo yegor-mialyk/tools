@@ -1,43 +1,52 @@
 # Seamless Sudo
 
-Seamless Sudo runs a user command as an administrator **without opening a separate console window**, so you will never lose its output.
+Seamless Sudo runs a user command as an administrator or SYSTEM account **without opening a separate console window**, ensuring that you will never lose its output.
 
 There is no need to open a new terminal instance as an administrator anymore.
 
 Here are a few examples:
 
-```text
-C:\>iisreset
+1. Querying the file system:
 
-Access denied, you must be an administrator of the remote computer to use this
-command. Either have your account added to the administrator local group of
-the remote computer or to the domain administrator global group.
+    ```text
+    C:\>fsutil 8dot3name query C:
+    Error:  Access is denied.
+    ```
 
-C:\>su -q iisreset
+    ```text
+    C:\>su fsutil 8dot3name query C:
+    Executing (as Administrator): fsutil 8dot3name query C:
 
-Attempting stop...
-Internet services successfully stopped
-Attempting start...
-Internet services successfully restarted
-```
+    The volume state is: 0 (8dot3 name creation is ENABLED)
+    The registry state is: 1 (8dot3 name creation is DISABLED on all volumes)
 
-```text
-C:\>fsutil file layout test.vhdx
-Error:  Access is denied.
+    Based on the above settings, 8dot3 name creation is DISABLED on "C:"
+    ```
 
-C:\>su fsutil file layout test.vhdx
-Executing: fsutil file layout test.vhdx
+2. Resetting Internet Information Services (IIS):
 
-********* File 0x0041000000012d93 *********
-File reference number   : 0x0041000000012d93
-[skipped]
-```
+    ```text
+    C:\>iisreset
+
+    Access denied, you must be an administrator of the remote computer to use this
+    command. Either have your account added to the administrator local group of
+    the remote computer or to the domain administrator global group.
+    ```
+
+    ```text
+    C:\>su -q iisreset
+
+    Attempting stop...
+    Internet services successfully stopped
+    Attempting start...
+    Internet services successfully restarted
+    ```
 
 User Account Control (UAC) may prompt the user for consent to run the command elevated or to enter the credentials of an administrator account used to run the command.
 
 ## Installation
 
-- Download the latest [Sudo release](https://github.com/yegor-mialyk/tools/releases/latest) for your platform.
+- Download the latest [Seamless Sudo release](https://github.com/yegor-mialyk/tools/releases/latest) for your platform.
 - Unpack the package into a folder accessible by the `PATH` environment variable.
 - Enjoy.
 
