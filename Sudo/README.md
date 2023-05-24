@@ -11,6 +11,8 @@ Here are a few examples:
     ```text
     C:\>fsutil 8dot3name query C:
     Error:  Access is denied.
+
+    C:\>_
     ```
 
     ```text
@@ -21,6 +23,8 @@ Here are a few examples:
     The registry state is: 1 (8dot3 name creation is DISABLED on all volumes)
 
     Based on the above settings, 8dot3 name creation is DISABLED on "C:"
+
+    C:\>_
     ```
 
 2. Resetting Internet Information Services (IIS):
@@ -31,6 +35,8 @@ Here are a few examples:
     Access denied, you must be an administrator of the remote computer to use this
     command. Either have your account added to the administrator local group of
     the remote computer or to the domain administrator global group.
+
+    C:\>_
     ```
 
     ```text
@@ -40,6 +46,44 @@ Here are a few examples:
     Internet services successfully stopped
     Attempting start...
     Internet services successfully restarted
+
+    C:\>_
+    ```
+
+3. Running a GUI application with the `--no-wait` option:
+
+    ```text
+    C:\>su --no-wait notepad
+    Executing (as Administrator): notepad
+
+    C:\>_
+    ```
+
+4. Running a PowerShell command:
+
+    ```text
+    C:\>su -q --ps (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    True
+
+    C:\>_
+    ```
+
+5. Running a command using Command Prompt:
+
+    ```text
+    C:\>su -q --cmd IF NOT DEFINED SESSIONNAME echo Administrator?
+    Administrator?
+
+    C:\>_
+    ```
+
+6. Running a command as the SYSTEM account:
+
+    ```text
+    C:\>su -q -s whoami
+    nt authority\system
+
+    C:\>_
     ```
 
 User Account Control (UAC) may prompt the user for consent to run the command elevated or to enter the credentials of an administrator account used to run the command.
@@ -62,7 +106,9 @@ Please use the `--no-wait` option (or just `-n`) to not wait for your applicatio
 
 ### Q: I'm trying to execute `su dir` but it fails
 
-`dir` is an internal command of your shell and not a standalone utility. So you have to run it through the shell, e.g. `su cmd /c dir`. Seamless Sudo does not use any shell by default because users may have different preferences.
+`dir` is an internal command of your shell and not a standalone utility.
+So you have to run it through the shell (e.g. `su cmd /c dir`) or use `su --cmd dir` for Command Prompt or `su --ps dir` for PowerShell.
+Seamless Sudo does not use any shell by default because users may have different preferences.
 
 ## Feedback
 

@@ -68,7 +68,9 @@ begin
 
   var ShowHelp := False;
   var InvalidOption := '';
-  var Command := '';
+  var ViaCmd := False;
+  var ViaPs := False;
+  var ViaPs1 := False;
 
   StartupDir := GetCurrentDir;
 
@@ -83,13 +85,22 @@ begin
     else
     if TestSwitch(pCmd, 'n', 'no-wait', NoWait) then
     else
+    if TestSwitch(pCmd, 'c', 'cmd', ViaCmd) then
+    else
+    if TestSwitch(pCmd, 'ps', 'ps', ViaPs) then
+    else
+    if TestSwitch(pCmd, 'ps1', 'ps1', ViaPs1) then
+    else
     if TestSwitch(pCmd, '', '--', ConsolePid) then
       Break
     else
-    if IsSwitch(pCmd, InvalidOption) or
-      not GetParamStr(pCmd, Command) or (Command <> '') then
+    begin
+      IsSwitch(pCmd, InvalidOption);
       Break;
+    end;
   until False;
+
+  var Command: string := Trim(pCmd);
 
   if ConsolePid <> '' then
   begin
@@ -106,19 +117,19 @@ begin
       Exit;
     end;
 
-    if not GetParamStr(pCmd, Command) then
-    begin
-      WriteLn('SU(admin): Error parsing command line.');
-      Exit;
-    end;
-
     if AsSystem then
     begin
-      RunAsSystem(Command, pCmd);
+      RunAsSystem(Command);
 
       if ErrorCode <> 0 then
         WriteLn('SU(admin): Cannot execute ''', Command, ''' as SYSTEM: ', SysErrorMessage(ErrorCode));
 
+      Exit;
+    end;
+
+    if not GetParamStr(pCmd, Command) then
+    begin
+      WriteLn('SU(admin): Error parsing command line.');
       Exit;
     end;
 
@@ -173,6 +184,9 @@ begin
       '  -n, --no-wait                  Do not wait for the command to finish.'#13#10,
       '  -s, --system                   Run as SYSTEM by cloning the access token of winlogon.exe.'#13#10,
       '  -q, --quiet                    Suppress all SU messages and banners (except errors).'#13#10,
+      '  -c, --cmd                      Run a command using Command Prompt (cmd.exe).'#13#10,
+      '  -ps, --ps                      Run a command using PowerShell Core (pwsh.exe).'#13#10,
+      '  -ps1, --ps1                    Run a command using the old version of PowerShell (powershell.exe).'#13#10,
       CRLF,
       'Note: Environment variables are expanded in both command and startup directory.'#13#10);
     ExitCode := 1;
@@ -198,8 +212,36 @@ begin
     else
       Write('Executing (as Administrator): ');
 
-    WriteLn(Command, pCmd, CRLF);
+    WriteLn(Command, CRLF);
   end;
+
+  if ViaCmd then
+    Command := 'cmd.exe /c ' + Command
+  else
+    if ViaPs or ViaPs1 then
+    begin
+      var buffer: AnsiString;
+
+      SetLength(buffer, Length(Command) * SizeOf(Char));
+      Move(Pointer(Command)^, Pointer(buffer)^, Length(buffer));
+
+      var pwsh: string;
+
+      if ViaPs1 then
+        pwsh := SearchFilePath('powershell.exe')
+      else
+        pwsh := SearchFilePath('pwsh.exe');
+
+      if pwsh = '' then
+      begin
+        WriteLn('SU: Cannot find PowerShell executable module: ',
+          T.Iff<string>(ViaPs, 'pwsh.exe', 'powershell.exe'));
+        ExitCode := 1;
+        Exit;
+      end;
+
+      Command := '"' + pwsh + '" -EncodedCommand ' + StringToWideString(Base64Encode(buffer));
+    end;
 
   var SEI: SHELLEXECUTEINFO;
   FillChar(SEI, SizeOf(SHELLEXECUTEINFO), 0);
@@ -208,8 +250,7 @@ begin
     SEE_MASK_NOASYNC or SEE_MASK_NO_CONSOLE;
   SEI.lpVerb := 'runas';
   SEI.lpFile := PChar(GetAppPath + SuApp);
-  SEI.lpParameters := PChar(CommandLine + ' ---- ' + IntToStr(GetCurrentProcessId()) +
-    ' "' + Command + '" ' + pCmd);
+  SEI.lpParameters := PChar(CommandLine + ' ---- ' + IntToStr(GetCurrentProcessId()) + ' ' + Command);
   SEI.nShow := SW_HIDE;
 
   if not ShellExecuteEx(@SEI) then

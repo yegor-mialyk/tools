@@ -19,7 +19,7 @@
 //
 
 const
-  VERSION_STRING = '1.1.0';
+  VERSION_STRING = '1.1.1';
   COPYRIGHT_STRING = 'Copyright (C) 1995-2023, Yegor Mialyk. All Rights Reserved.';
 
   APP_NAME = 'Seamless Sudo';

@@ -1,4 +1,4 @@
-procedure RunAsSystem(const Command: string; const CommandArgs: PChar);
+procedure RunAsSystem(const Command: string);
 begin
   if not AdjustPrivilege(SE_DEBUG_NAME) then
     Exit;
@@ -50,7 +50,7 @@ begin
 
   if not CreateProcessWithTokenW(DuplicatedTokenHandle, 0, NULL,
     PChar('"' + GetAppPath + SuApp + '" ' + GetSuCommandLine +
-    ' ---- ' + ConsolePid + ' "' + Command + '" ' + CommandArgs), 0, NULL, Pointer(StartupDir), SI, PI) then
+    ' ---- ' + ConsolePid + ' ' + Command), 0, NULL, Pointer(StartupDir), SI, PI) then
   begin
     ErrorCode := GetLastError();
     Exit;
