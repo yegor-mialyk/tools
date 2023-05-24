@@ -10,6 +10,11 @@
         "build.cmd"
       ],
       "problemMatcher": {
+        "owner": "pascal",
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}\\Sudo"
+        ],
         "pattern": {
           "regexp": "^(.*)\\((\\d+)\\)\\s(Fatal|Error|Warning|Hint):(.*)",
           "file": 1,
@@ -22,7 +27,7 @@
         "cwd": "${workspaceFolder}\\Sudo"
       },
       "presentation": {
-        "reveal": "silent"
+        "reveal": "never"
       },
       "group": {
         "kind": "build",
