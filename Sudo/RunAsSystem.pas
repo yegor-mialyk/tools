@@ -49,7 +49,7 @@ begin
   SI.wShowWindow := SW_HIDE;
 
   if not CreateProcessWithTokenW(DuplicatedTokenHandle, 0, NULL,
-    PChar('"' + GetAppPath + SuApp + '" ' + GetSuCommandLine +
+    PChar('"' + ParamStr(0) + '" ' + GetSuCommandLine +
     ' ---- ' + ConsolePid + ' ' + Command), 0, NULL, Pointer(StartupDir), SI, PI) then
   begin
     ErrorCode := GetLastError();

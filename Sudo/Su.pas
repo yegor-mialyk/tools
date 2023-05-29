@@ -21,9 +21,6 @@ uses
   System.SysUtils,
   My.Lib;
 
-const
-  SuApp = 'su.exe';
-
 {$INCLUDE Common.g.pas}
 
 {$SETPEFLAGS IMAGE_FILE_RELOCS_STRIPPED}
@@ -249,7 +246,7 @@ begin
   SEI.fMask := SEE_MASK_DOENVSUBST or SEE_MASK_FLAG_NO_UI or SEE_MASK_NOCLOSEPROCESS or
     SEE_MASK_NOASYNC or SEE_MASK_NO_CONSOLE;
   SEI.lpVerb := 'runas';
-  SEI.lpFile := PChar(GetAppPath + SuApp);
+  SEI.lpFile := Pointer(ParamStr(0));
   SEI.lpParameters := PChar(CommandLine + ' ---- ' + IntToStr(GetCurrentProcessId()) + ' ' + Command);
   SEI.nShow := SW_HIDE;
 
